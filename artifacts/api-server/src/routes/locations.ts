@@ -78,11 +78,11 @@ router.get("/areas", async (req, res) => {
 
 router.post("/areas", authenticate, requireRole("admin", "super_admin"), async (req, res) => {
   try {
-    const { name, nameAr, governorateId, isActive } = req.body;
+    const { name, nameAr, governorateId, isActive, extraPoints } = req.body;
     if (!name || !nameAr || !governorateId) return res.status(400).json({ error: "البيانات مطلوبة" });
     const [area] = await db
       .insert(areasTable)
-      .values({ name, nameAr, governorateId, isActive: isActive ?? true })
+      .values({ name, nameAr, governorateId, isActive: isActive ?? true, extraPoints: extraPoints ?? 0 })
       .returning();
     return res.status(201).json(area);
   } catch (err) {
@@ -93,10 +93,15 @@ router.post("/areas", authenticate, requireRole("admin", "super_admin"), async (
 router.patch("/areas/:id", authenticate, requireRole("admin", "super_admin"), async (req, res) => {
   try {
     const id = parseInt(req.params["id"] as string);
-    const { name, nameAr, isActive } = req.body;
+    const { name, nameAr, isActive, extraPoints } = req.body;
+    const updates: Record<string, any> = {};
+    if (name !== undefined) updates.name = name;
+    if (nameAr !== undefined) updates.nameAr = nameAr;
+    if (isActive !== undefined) updates.isActive = isActive;
+    if (extraPoints !== undefined) updates.extraPoints = parseInt(extraPoints);
     const [area] = await db
       .update(areasTable)
-      .set({ name, nameAr, isActive })
+      .set(updates)
       .where(eq(areasTable.id, id))
       .returning();
     if (!area) return res.status(404).json({ error: "المنطقة غير موجودة" });

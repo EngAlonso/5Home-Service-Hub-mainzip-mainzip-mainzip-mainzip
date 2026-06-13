@@ -236,6 +236,7 @@ export const areasTable = pgTable("areas", {
     .notNull()
     .references(() => governoratesTable.id, { onDelete: "cascade" }),
   isActive: boolean("is_active").notNull().default(true),
+  extraPoints: integer("extra_points").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -561,6 +562,31 @@ export const commissionsRelations = relations(commissionsTable, ({ one }) => ({
 }));
 
 export type Commission = typeof commissionsTable.$inferSelect;
+
+// ─── COMMISSION RANGES ────────────────────────────────────────────────────────
+// Range-based commission rules: price bracket → required points.
+// service_id = NULL means "all services" (global rule).
+// Priority: service-specific range overrides global range.
+// Total required points = range.requiredPoints + area.extraPoints.
+
+export const commissionRangesTable = pgTable("commission_ranges", {
+  id: serial("id").primaryKey(),
+  serviceId: integer("service_id").references(() => servicesTable.id, { onDelete: "cascade" }),
+  minPrice: numeric("min_price", { precision: 10, scale: 2 }).notNull(),
+  maxPrice: numeric("max_price", { precision: 10, scale: 2 }).notNull(),
+  requiredPoints: integer("required_points").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const commissionRangesRelations = relations(commissionRangesTable, ({ one }) => ({
+  service: one(servicesTable, {
+    fields: [commissionRangesTable.serviceId],
+    references: [servicesTable.id],
+  }),
+}));
+
+export type CommissionRange = typeof commissionRangesTable.$inferSelect;
 
 // ─── PRICE ADJUSTMENTS ───────────────────────────────────────────────────────
 

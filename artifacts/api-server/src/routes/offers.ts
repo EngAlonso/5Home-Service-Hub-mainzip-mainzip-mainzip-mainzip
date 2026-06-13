@@ -2,10 +2,10 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import {
   offersTable, serviceRequestsTable, usersTable,
-  technicianProfilesTable, commissionsTable, pointTransactionsTable,
+  technicianProfilesTable, commissionRangesTable, areasTable, pointTransactionsTable,
   notificationsTable, ratingsTable, auditTrailTable, servicesTable,
 } from "@workspace/db";
-import { eq, and, avg, count, desc, ne, isNull } from "drizzle-orm";
+import { eq, and, avg, count, desc, ne, isNull, sql } from "drizzle-orm";
 import { authenticate } from "../middlewares/auth";
 
 const router = Router();
@@ -42,29 +42,54 @@ async function releaseReservedForOffers(
   }
 }
 
-// ─── Helper: resolve commission — service-specific first, then global fallback ─
-async function resolveCommission(serviceId: number) {
-  // 1. Service-specific commission
+// ─── Helper: resolve commission range → total required points ─────────────────
+// Priority: service-specific range → global range (service_id IS NULL).
+// Total = range.requiredPoints + area.extraPoints.
+// Returns null if no matching range exists for the given price.
+async function resolveCommissionRange(
+  serviceId: number,
+  laborPrice: number,
+  areaId: number | null
+): Promise<number | null> {
+  // 1. Service-specific range covering this labor price
   const [specific] = await db
     .select()
-    .from(commissionsTable)
-    .where(eq(commissionsTable.serviceId, serviceId))
+    .from(commissionRangesTable)
+    .where(and(
+      eq(commissionRangesTable.serviceId, serviceId),
+      sql`${commissionRangesTable.minPrice} <= ${laborPrice}`,
+      sql`${commissionRangesTable.maxPrice} >= ${laborPrice}`,
+    ))
     .limit(1);
-  if (specific) return specific;
 
-  // 2. Global "all services" commission (service_id IS NULL AND area_id IS NULL)
-  const [global] = await db
-    .select()
-    .from(commissionsTable)
-    .where(and(isNull(commissionsTable.serviceId), isNull(commissionsTable.areaId)))
-    .limit(1);
-  return global ?? null;
-}
+  // 2. Global range (service_id IS NULL) covering this labor price
+  const rangeRow = specific ?? await (async () => {
+    const [global] = await db
+      .select()
+      .from(commissionRangesTable)
+      .where(and(
+        isNull(commissionRangesTable.serviceId),
+        sql`${commissionRangesTable.minPrice} <= ${laborPrice}`,
+        sql`${commissionRangesTable.maxPrice} >= ${laborPrice}`,
+      ))
+      .limit(1);
+    return global ?? null;
+  })();
 
-// ─── Helper: calculate required points for a commission ───────────────────────
-function calcRequiredPoints(commission: { type: string; value: string }, laborPrice: number): number {
-  if (commission.type === "fixed") return parseFloat(commission.value);
-  return Math.ceil((laborPrice * parseFloat(commission.value)) / 100);
+  if (!rangeRow) return null;
+
+  // 3. Area extra points
+  let areaExtra = 0;
+  if (areaId) {
+    const [area] = await db
+      .select({ extraPoints: areasTable.extraPoints })
+      .from(areasTable)
+      .where(eq(areasTable.id, areaId))
+      .limit(1);
+    areaExtra = area?.extraPoints ?? 0;
+  }
+
+  return rangeRow.requiredPoints + areaExtra;
 }
 
 // ─── GET /api/offers/my ───────────────────────────────────────────────────────
@@ -212,22 +237,19 @@ router.post("/requests/:requestId/offers", authenticate, async (req, res) => {
       return res.status(400).json({ error: "لا يمكن تقديم عرض على هذا الطلب بعد الآن" });
     }
 
-    // Commission is on LABOR cost only (not spare parts).
-    // Priority: service-specific → global (service_id IS NULL AND area_id IS NULL).
-    const commission = await resolveCommission(request.serviceId);
+    // Commission uses range-based rules: find matching price bracket then add area extra points.
+    // Priority: service-specific range → global range (service_id IS NULL).
+    const requiredPoints = await resolveCommissionRange(request.serviceId, laborPrice, request.areaId ?? null);
 
-    // A commission record MUST exist before any offer can be submitted.
-    if (!commission) {
+    if (requiredPoints === null) {
       req.log.warn(
-        { serviceId: request.serviceId, requestId },
-        "offer submission blocked: no commission configured for service"
+        { serviceId: request.serviceId, laborPrice, requestId },
+        "offer submission blocked: no commission range covers this price"
       );
       return res.status(400).json({
-        error: "لم يتم إعداد عمولة لهذه الخدمة",
+        error: "لا يوجد نطاق عمولة محدد لهذا السعر، يرجى التواصل مع الإدارة",
       });
     }
-
-    const requiredPoints = calcRequiredPoints(commission, laborPrice);
 
     // Available balance = total balance – already reserved
     const availableBalance = profile.pointsBalance - profile.reservedPoints;
@@ -323,13 +345,10 @@ router.patch("/requests/:requestId/offers/:offerId", authenticate, async (req, r
         return res.status(400).json({ error: "سعر الخدمة يجب أن يكون أكبر من صفر" });
       }
 
-      const [commission] = await db
-        .select()
-        .from(commissionsTable)
-        .where(eq(commissionsTable.serviceId, request.serviceId))
-        .limit(1);
-
-      const newRequired = calcRequiredPoints(commission, newLaborPrice);
+      const newRequired = await resolveCommissionRange(request.serviceId, newLaborPrice, request.areaId ?? null);
+      if (newRequired === null) {
+        return res.status(400).json({ error: "لا يوجد نطاق عمولة محدد لهذا السعر" });
+      }
       const oldRequired = offer.reservedPoints;
       const diff = newRequired - oldRequired;
 

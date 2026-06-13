@@ -40,6 +40,7 @@ import AdminRequestDetail from "@/pages/admin/request-detail";
 import AdminServices from "@/pages/admin/services";
 import AdminLocations from "@/pages/admin/locations";
 import AdminCommissions from "@/pages/admin/commissions";
+import AdminCommissionRanges from "@/pages/admin/commission-ranges";
 import AdminPoints from "@/pages/admin/points";
 import AdminSupport from "@/pages/admin/support";
 import AdminAnalytics from "@/pages/admin/analytics";
@@ -323,6 +324,15 @@ function Router() {
           <ProtectedAdmin>
             <AdminLayout>
               <AdminCommissions />
+            </AdminLayout>
+          </ProtectedAdmin>
+        )}
+      </Route>
+      <Route path="/admin/commission-ranges">
+        {() => (
+          <ProtectedAdmin>
+            <AdminLayout>
+              <AdminCommissionRanges />
             </AdminLayout>
           </ProtectedAdmin>
         )}

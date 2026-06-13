@@ -4,7 +4,7 @@ import { useLogout } from "@workspace/api-client-react";
 import {
   LayoutDashboard, Users, Wrench, ClipboardList, Settings2,
   MapPin, DollarSign, Coins, HeadphonesIcon, BarChart2,
-  FileText, Users2, ScrollText, LogOut, Image
+  FileText, Users2, ScrollText, LogOut, Image, Layers
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +47,7 @@ const navGroups: NavGroup[] = [
       { href: "/admin/services", icon: Settings2, label: "الخدمات", permission: "services.edit" },
       { href: "/admin/locations", icon: MapPin, label: "المناطق", permission: "locations.edit" },
       { href: "/admin/commissions", icon: DollarSign, label: "العمولات", permission: "commissions.view" },
+      { href: "/admin/commission-ranges", icon: Layers, label: "نطاقات العمولة", permission: "commissions.view" },
       { href: "/admin/points", icon: Coins, label: "النقاط", permission: "points.view" },
     ],
   },

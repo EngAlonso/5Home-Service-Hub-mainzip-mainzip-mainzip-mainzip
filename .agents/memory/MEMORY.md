@@ -2,3 +2,4 @@
 - [Fnashha point reservation system](fnashha-points.md) — Design: pointsBalance=total, reservedPoints=locked; available=total-reserved; deduct permanently at completion.
 - [Fnashha generated API hook signatures](fnashha-api-hooks.md) — Critical: generated hooks use positional args not objects; useListMessages(requestId:number), not {requestId}.
 - [Fnashha point transaction types](fnashha-point-txn-types.md) — DB enum has credit/debit/commission/release; reserve changes only update reservedPoints column (no transaction); release logs a transaction but does not change pointsBalance.
+- [Fnashha commission ranges system](fnashha-commission-ranges.md) — Range-based commission: commission_ranges table + areas.extra_points; replaces flat commissionsTable in offer submission; admin CRUD at /admin/commission-ranges.
