@@ -1,18 +1,24 @@
 ---
 name: Fnashha Point Transaction Types
-description: The point_transaction_type DB enum only has three values — using others causes runtime errors.
+description: DB enum values, actor recording rules, and FK constraints for point_transactions.
 ---
 
-## Rule
-The `point_transaction_type` PostgreSQL enum only has: `"credit"`, `"debit"`, `"commission"`.
+## Enum values
+`point_transaction_type` has: `"credit"`, `"debit"`, `"commission"`, `"release"`.
 
-There are NO `"reservation"` or `"release"` types.
+## Actor recording — CRITICAL
+`point_transactions.admin_id` is a FK → `users.id`. The Super Admin has **no users row** — JWT carries `id: 0`.
+
+**Rule:** Never pass `adminId: req.user!.id` directly. Use `resolveActor()` in `points.ts`:
+- `req.user!.id === 0` (Super Admin) → `{ adminId: null, performedBy: "Super Admin" }`
+- `req.user!.id > 0` (regular admin) → `{ adminId: userId, performedBy: null }`
+
+**Why:** FK `admin_id → users.id` rejects `admin_id = 0`. `performed_by` (text, nullable) stores the actor name when no FK row exists.
+
+## Transaction atomicity
+`points/add` and `points/deduct` wrap UPDATE + INSERT in `db.transaction()`. If INSERT fails, the balance UPDATE is rolled back.
 
 ## Design
-- When a technician submits an offer: `technicianProfilesTable.reservedPoints` increases (no transaction written)
-- When an offer is rejected/other tech selected: `reservedPoints` decreases (no transaction written)  
-- When a request is completed: permanent deduction → write a `"commission"` transaction record
-
-**Why:** The reservation/release cycle doesn't actually change the spendable balance (total stays the same); only the locked portion changes. Writing `"commission"` only at the point of real deduction keeps the ledger clean.
-
-**How to apply:** Never insert into `pointTransactionsTable` with type `"reservation"` or `"release"` — it will throw a DB enum constraint error.
+- Offer submitted: `reservedPoints` increases — no transaction written
+- Offer rejected/other tech selected: `reservedPoints` decreases + `"release"` transaction written
+- Request completed: permanent deduction → `"commission"` transaction written

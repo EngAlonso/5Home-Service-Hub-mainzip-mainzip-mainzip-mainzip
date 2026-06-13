@@ -507,6 +507,7 @@ export const pointTransactionsTable = pgTable(
       () => serviceRequestsTable.id
     ),
     adminId: integer("admin_id").references(() => usersTable.id),
+    performedBy: text("performed_by"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [index("point_txn_technician_idx").on(t.technicianId)]

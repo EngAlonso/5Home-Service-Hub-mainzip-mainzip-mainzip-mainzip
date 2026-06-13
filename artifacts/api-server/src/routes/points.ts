@@ -6,6 +6,16 @@ import { authenticate, requireRole } from "../middlewares/auth";
 
 const router = Router();
 
+// ─── Helper: resolve actor fields for point_transactions ──────────────────────
+// Super admin (id=0) has no users table row — store as performedBy text instead.
+// Regular admins have a real users.id — store in adminId FK.
+function resolveActor(userId: number): { adminId: number | null; performedBy: string | null } {
+  if (userId === 0) {
+    return { adminId: null, performedBy: "Super Admin" };
+  }
+  return { adminId: userId, performedBy: null };
+}
+
 // GET /api/points/balance — returns total, reserved, and available
 router.get("/points/balance", authenticate, async (req, res) => {
   try {
@@ -20,15 +30,16 @@ router.get("/points/balance", authenticate, async (req, res) => {
 
     return res.json({
       technicianId: req.user!.id,
-      balance: profile.pointsBalance,       // total
-      reservedPoints: profile.reservedPoints, // locked
-      available,                              // usable
+      balance: profile.pointsBalance,
+      reservedPoints: profile.reservedPoints,
+      available,
     });
   } catch (err) {
     return res.status(500).json({ error: "حدث خطأ في الخادم" });
   }
 });
 
+// GET /api/points/transactions
 router.get("/points/transactions", authenticate, async (req, res) => {
   try {
     const { technicianId, page = "1" } = req.query as any;
@@ -68,62 +79,102 @@ router.get("/points/transactions", authenticate, async (req, res) => {
   }
 });
 
+// POST /api/points/add
 router.post("/points/add", authenticate, requireRole("admin", "super_admin"), async (req, res) => {
   try {
     const { technicianId, amount, description } = req.body;
     if (!technicianId || !amount) return res.status(400).json({ error: "البيانات مطلوبة" });
 
-    const [profile] = await db
-      .select()
-      .from(technicianProfilesTable)
-      .where(eq(technicianProfilesTable.userId, technicianId))
-      .limit(1);
-    if (!profile) return res.status(404).json({ error: "الفني غير موجود" });
+    const actor = resolveActor(req.user!.id);
 
-    const newBalance = profile.pointsBalance + parseInt(amount);
-    await db.update(technicianProfilesTable).set({ pointsBalance: newBalance, updatedAt: new Date() }).where(eq(technicianProfilesTable.id, profile.id));
+    const result = await db.transaction(async (tx) => {
+      const [profile] = await tx
+        .select()
+        .from(technicianProfilesTable)
+        .where(eq(technicianProfilesTable.userId, technicianId))
+        .limit(1);
+      if (!profile) throw new Error("الفني غير موجود");
 
-    await db.insert(pointTransactionsTable).values({
-      technicianId: profile.id,
-      amount: parseInt(amount),
-      type: "credit",
-      description: description || "إضافة نقاط من الإدارة",
-      balanceAfter: newBalance,
-      adminId: req.user!.id,
+      const newBalance = profile.pointsBalance + parseInt(amount);
+
+      await tx
+        .update(technicianProfilesTable)
+        .set({ pointsBalance: newBalance, updatedAt: new Date() })
+        .where(eq(technicianProfilesTable.id, profile.id));
+
+      const [txn] = await tx.insert(pointTransactionsTable).values({
+        technicianId: profile.id,
+        amount: parseInt(amount),
+        type: "credit",
+        description: description || "إضافة نقاط من الإدارة",
+        balanceAfter: newBalance,
+        adminId: actor.adminId,
+        performedBy: actor.performedBy,
+      }).returning();
+
+      return { profile, newBalance, txn };
     });
 
-    return res.json({ technicianId, balance: newBalance, available: Math.max(0, newBalance - profile.reservedPoints) });
-  } catch (err) {
+    return res.json({
+      technicianId,
+      balance: result.newBalance,
+      available: Math.max(0, result.newBalance - result.profile.reservedPoints),
+      transaction: result.txn,
+    });
+  } catch (err: any) {
+    if (err.message === "الفني غير موجود") {
+      return res.status(404).json({ error: "الفني غير موجود" });
+    }
     return res.status(500).json({ error: "حدث خطأ في الخادم" });
   }
 });
 
+// POST /api/points/deduct
 router.post("/points/deduct", authenticate, requireRole("admin", "super_admin"), async (req, res) => {
   try {
     const { technicianId, amount, description } = req.body;
     if (!technicianId || !amount) return res.status(400).json({ error: "البيانات مطلوبة" });
 
-    const [profile] = await db
-      .select()
-      .from(technicianProfilesTable)
-      .where(eq(technicianProfilesTable.userId, technicianId))
-      .limit(1);
-    if (!profile) return res.status(404).json({ error: "الفني غير موجود" });
+    const actor = resolveActor(req.user!.id);
 
-    const newBalance = Math.max(0, profile.pointsBalance - parseInt(amount));
-    await db.update(technicianProfilesTable).set({ pointsBalance: newBalance, updatedAt: new Date() }).where(eq(technicianProfilesTable.id, profile.id));
+    const result = await db.transaction(async (tx) => {
+      const [profile] = await tx
+        .select()
+        .from(technicianProfilesTable)
+        .where(eq(technicianProfilesTable.userId, technicianId))
+        .limit(1);
+      if (!profile) throw new Error("الفني غير موجود");
 
-    await db.insert(pointTransactionsTable).values({
-      technicianId: profile.id,
-      amount: parseInt(amount),
-      type: "debit",
-      description: description || "خصم نقاط من الإدارة",
-      balanceAfter: newBalance,
-      adminId: req.user!.id,
+      const newBalance = Math.max(0, profile.pointsBalance - parseInt(amount));
+
+      await tx
+        .update(technicianProfilesTable)
+        .set({ pointsBalance: newBalance, updatedAt: new Date() })
+        .where(eq(technicianProfilesTable.id, profile.id));
+
+      const [txn] = await tx.insert(pointTransactionsTable).values({
+        technicianId: profile.id,
+        amount: parseInt(amount),
+        type: "debit",
+        description: description || "خصم نقاط من الإدارة",
+        balanceAfter: newBalance,
+        adminId: actor.adminId,
+        performedBy: actor.performedBy,
+      }).returning();
+
+      return { profile, newBalance, txn };
     });
 
-    return res.json({ technicianId, balance: newBalance, available: Math.max(0, newBalance - profile.reservedPoints) });
-  } catch (err) {
+    return res.json({
+      technicianId,
+      balance: result.newBalance,
+      available: Math.max(0, result.newBalance - result.profile.reservedPoints),
+      transaction: result.txn,
+    });
+  } catch (err: any) {
+    if (err.message === "الفني غير موجود") {
+      return res.status(404).json({ error: "الفني غير موجود" });
+    }
     return res.status(500).json({ error: "حدث خطأ في الخادم" });
   }
 });
