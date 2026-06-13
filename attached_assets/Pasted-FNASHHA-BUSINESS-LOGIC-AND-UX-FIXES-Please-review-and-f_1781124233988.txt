@@ -1,0 +1,143 @@
+FNASHHA BUSINESS LOGIC AND UX FIXES
+Please review and fix the following issues.
+====================================
+INCORRECT INSUFFICIENT POINTS ERROR ====================================
+Current behavior:
+When a technician tries to submit an offer without enough points, the system shows:
+"الفنيين فقط من يقدمون العرض"
+This is incorrect and misleading.
+Required:
+If technician balance is insufficient:
+Show:
+"رصيد النقاط الحالي لا يكفي لتقديم عرض سعر. يرجى شحن الرصيد والتواصل مع الإدارة."
+The system must clearly explain the actual reason.
+==================================== 2. CUSTOMER CANNOT ACCEPT OFFERS
+Current behavior:
+When customer tries to choose a technician, the system shows:
+"العملاء فقط يمكنهم اختيار فني"
+Even though the logged-in user is already a customer.
+Required:
+Fix role validation.
+Customers must be able to:
+View offers
+Choose one technician
+Confirm technician selection
+Verify customer permissions and authentication.
+==================================== 3. LIVE VOICE RECORDING
+Current behavior:
+Customers can only upload audio files from device.
+Required:
+Add live voice recording.
+Customer should be able to:
+Start recording
+Stop recording
+Preview recording
+Delete recording
+Re-record
+The recording should be attached directly to the request.
+Keep manual audio upload as an optional feature.
+==================================== 4. PROFILE PHOTOS
+Customers:
+Upload profile photo
+Change profile photo
+Technicians:
+Upload profile photo
+Change profile photo
+After technician approval:
+Use the approved profile image as the technician avatar throughout the system.
+Display technician image in:
+Offers
+Profile
+Search results
+Request details
+==================================== 5. POINTS TRANSACTION HISTORY
+Create complete points ledger.
+Show:
+Added points
+Deducted points
+Reserved points
+Released points
+For each record:
+Date
+Amount
+Operation type
+Admin name
+Notes
+Add filters:
+All
+Added
+Deducted
+Reserved
+Released
+==================================== 6. POINT ADDITION SUCCESS MESSAGE
+Current behavior:
+Points are added successfully but system shows an error.
+This causes duplicate additions.
+Required:
+Show proper success message:
+"تمت إضافة النقاط بنجاح"
+Only show error when operation actually fails.
+==================================== 7. TECHNICIAN MANAGEMENT FILTERS
+Replace current filters with:
+كل الفنيين
+بانتظار الموافقة
+تم الموافقة
+المرفوضين
+Allow filtering and searching in each group.
+==================================== 8. REJECTED TECHNICIANS LOCATION
+Currently rejected technicians are placed in a separate dashboard area.
+Required:
+Move rejected technicians into:
+"إدارة الفنيين"
+as a dedicated tab:
+"المرفوضين"
+Do not delete their records.
+Keep:
+Phone number
+National ID
+Images
+Rejection reason
+Rejection date
+==================================== 9. POST-SELECTION PRICE ADJUSTMENT
+After customer selects technician:
+Technician must see:
+تعديل السعر
+تم التنفيذ
+==================================== 10. PRICE CHANGE REQUEST WORKFLOW
+When technician clicks:
+"تعديل السعر"
+Require:
+New Price
+Updated Problem Description
+New Supporting Image
+All fields mandatory.
+Send request to:
+Customer
+Admin
+Customer must approve or reject the new price.
+No price change should become active without customer approval.
+==================================== 11. COMPLETION BUTTON
+After service is completed:
+Technician clicks:
+"تم التنفيذ"
+Customer receives confirmation request.
+Only when both parties confirm:
+Request becomes completed
+Commission is deducted
+Rating screen becomes mandatory
+==================================== FINAL TESTING
+Verify:
+Customer can select technician
+Technician cannot submit offers without points
+Live voice recording works
+Profile photos display correctly
+Points history works
+Points success messages are correct
+Technician filters work
+Price adjustment workflow works
+Completion workflow works
+Generate a report listing:
+Fixed bugs
+Modified files
+Database changes
+Tested scenarios

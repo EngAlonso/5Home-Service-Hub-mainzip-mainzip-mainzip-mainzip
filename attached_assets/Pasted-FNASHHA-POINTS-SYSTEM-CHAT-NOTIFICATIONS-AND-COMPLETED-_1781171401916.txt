@@ -1,0 +1,146 @@
+FNASHHA - POINTS SYSTEM, CHAT, NOTIFICATIONS AND COMPLETED REQUESTS FIXES
+Please review and permanently fix the following business logic issues.
+====================================
+POINTS RESERVATION SYSTEM IS BROKEN ====================================
+Current behavior:
+Points are not being reserved correctly.
+Required:
+When technician submits an offer:
+Calculate required commission.
+Reserve the required points immediately.
+Reserved points must not be available for other offers.
+Example:
+Balance = 1000 Commission = 70
+Available = 930 Reserved = 70
+==================================== 2. RELEASE RESERVED POINTS
+If request is cancelled:
+Release reserved points.
+If customer chooses another technician:
+Release reserved points.
+If offer is rejected:
+Release reserved points.
+If technician is removed from request:
+Release reserved points.
+==================================== 3. COMMISSION DEDUCTION IS NOT WORKING
+Current behavior:
+Completed requests do not deduct commission.
+Required:
+When BOTH technician and customer confirm completion:
+Deduct reserved commission permanently.
+Move points from Reserved to Deducted.
+Create transaction history record.
+==================================== 4. POINTS TRANSACTION HISTORY
+Record all point operations:
+Added
+Reserved
+Released
+Deducted
+Store:
+Date
+Amount
+Request ID
+Technician
+Admin
+Notes
+==================================== 5. CUSTOMER RATING ERROR
+Current behavior:
+Customer receives an error when submitting rating.
+Required:
+Fix rating submission.
+When rating succeeds:
+Save rating
+Save comment
+Update technician average rating
+Update technician rating count
+Show:
+"تم إرسال التقييم بنجاح"
+==================================== 6. ADMIN MUST RECEIVE PRICE CHANGE DETAILS
+Current behavior:
+Price adjustment details are not visible to admins.
+Required:
+Admins must see:
+Original service price
+Original spare parts price
+Original total
+New service price
+New spare parts price
+New total
+Updated description
+Supporting image
+Technician
+Customer
+Approval status
+==================================== 7. CHAT MESSAGES NOT APPEARING
+Current behavior:
+Notifications arrive.
+Messages do not appear.
+Customer opens chat and cannot see technician messages.
+Technician opens chat and cannot see customer messages.
+Required:
+Fix real-time chat.
+Messages must:
+Save correctly
+Load correctly
+Display correctly
+Persist after refresh
+==================================== 8. MESSAGE NOTIFICATIONS
+When technician sends message:
+Customer receives notification.
+Clicking notification must open:
+The exact conversation.
+When customer sends message:
+Technician receives notification.
+Clicking notification must open:
+The exact conversation.
+==================================== 9. SMART NOTIFICATION ROUTING
+Every notification must redirect correctly.
+Examples:
+Message notification: → Open chat
+Offer notification: → Open offer details
+New request notification: → Open matching request
+Price adjustment notification: → Open adjustment screen
+Completion notification: → Open completion confirmation
+Ticket notification: → Open ticket
+==================================== 10. COMPLETED REQUESTS MISSING
+Current behavior:
+Completed requests do not appear for technicians.
+Required:
+Create:
+"الطلبات المكتملة"
+for technicians.
+Show:
+Request details
+Customer
+Final price
+Completion date
+Rating
+Commission deducted
+Allow search and filters.
+==================================== 11. AUDIT LOG
+Log all events:
+Offer submitted
+Points reserved
+Points released
+Commission deducted
+Message sent
+Rating submitted
+Price adjusted
+Request completed
+==================================== FINAL TESTING
+Verify:
+Points reservation works
+Points release works
+Commission deduction works
+Rating submission works
+Admin sees price changes
+Chat messages appear
+Notifications redirect correctly
+Completed requests appear
+Transaction history is accurate
+Provide final report:
+Root causes
+Modified files
+Database changes
+API changes
+Tested scenarios
+Confirmation that all workflows operate correctly

@@ -1,0 +1,4 @@
+- [Fnashha project overview](fnashha-overview.md) — Arabic home services platform: React+Vite frontend + Express/Drizzle API + PostgreSQL; pnpm monorepo.
+- [Fnashha point reservation system](fnashha-points.md) — Design: pointsBalance=total, reservedPoints=locked; available=total-reserved; deduct permanently at completion.
+- [Fnashha generated API hook signatures](fnashha-api-hooks.md) — Critical: generated hooks use positional args not objects; useListMessages(requestId:number), not {requestId}.
+- [Fnashha point transaction types](fnashha-point-txn-types.md) — DB enum only has credit/debit/commission; no reservation/release types exist; track locking via reservedPoints column only.

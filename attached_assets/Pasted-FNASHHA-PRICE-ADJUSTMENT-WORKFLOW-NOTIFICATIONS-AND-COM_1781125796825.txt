@@ -1,0 +1,148 @@
+FNASHHA - PRICE ADJUSTMENT WORKFLOW, NOTIFICATIONS AND COMPLETION PROCESS FIXES
+Please review and fix the complete request lifecycle after technician selection.
+====================================
+PRICE ADJUSTMENT REQUEST BUG ====================================
+Current behavior:
+After a technician submits a price adjustment request, the customer sees:
+"طلب تعديل السعر جاري تحميل التفاصيل..."
+and the process stops.
+Required:
+Load and display the full adjustment request correctly.
+Show:
+Original Service Price
+Original Spare Parts Price
+Original Total Price
+New Service Price
+New Spare Parts Price
+New Total Price
+Updated Problem Description
+Supporting Image
+Request Date
+==================================== 2. PRICE ADJUSTMENT APPROVAL SCREEN
+Customer must see a comparison table:
+Original Service Price New Service Price
+Original Spare Parts Price New Spare Parts Price
+Original Total New Total
+Show:
+Updated description
+Supporting image
+Display two buttons:
+Approve Price Adjustment
+Reject Price Adjustment
+==================================== 3. PRICE ADJUSTMENT APPROVAL LOGIC
+If customer approves:
+Update request pricing
+Save approval date
+Notify technician
+Notify admins
+Continue request workflow
+If customer rejects:
+Keep original pricing
+Notify technician
+Keep request active
+==================================== 4. PRICE CHANGE HISTORY
+Create a complete adjustment history section.
+Store:
+Old prices
+New prices
+Adjustment reason
+Supporting image
+Technician name
+Request date
+Customer decision
+Decision date
+Display all previous adjustments inside the request details page.
+==================================== 5. NOTIFICATIONS
+When technician submits a price adjustment:
+Customer receives:
+In-app notification
+Red notification counter
+Message:
+"الفني طلب تعديل السعر للطلب رقم #X"
+When customer approves:
+Technician receives notification.
+When customer rejects:
+Technician receives notification.
+==================================== 6. BLOCK DUPLICATE ADJUSTMENTS
+If there is already a pending adjustment request:
+Technician cannot create another adjustment request.
+Show:
+"يوجد طلب تعديل سعر قيد المراجعة."
+==================================== 7. BLOCK COMPLETION DURING REVIEW
+If price adjustment request is pending:
+Disable:
+تم التنفيذ
+until customer responds.
+==================================== 8. COMPLETION BUTTON
+After customer selects a technician:
+Technician must see:
+تعديل السعر
+تم التنفيذ
+==================================== 9. COMPLETION WORKFLOW
+When technician clicks:
+"تم التنفيذ"
+Request status becomes:
+"بانتظار تأكيد العميل"
+Customer receives notification.
+Customer sees:
+"هل تم تنفيذ الخدمة بنجاح؟"
+Buttons:
+نعم تم التنفيذ
+لا لم يتم التنفيذ
+==================================== 10. FINAL COMPLETION
+Only when BOTH technician and customer confirm:
+Request becomes completed
+Chat becomes locked
+Commission is deducted
+Reserved points become consumed
+Rating becomes mandatory
+==================================== 11. CUSTOMER RATING
+Customer must be forced to submit a rating before closing the completion screen.
+Rating includes:
+Stars
+Optional comment
+Store rating permanently.
+Update technician average rating automatically.
+Update technician rating count automatically.
+==================================== 12. TECHNICIAN EXCLUSIVITY
+Once customer selects a technician:
+Customer cannot select another technician
+Only selected technician can manage the request
+Only selected technician can request price changes
+Only selected technician can mark completion
+All other offers become:
+"Rejected"
+Automatically release any reserved points for rejected offers.
+==================================== 13. AUDIT LOG
+Record all actions:
+Technician selected
+Price adjustment requested
+Price adjustment approved
+Price adjustment rejected
+Completion requested
+Completion confirmed
+Rating submitted
+Store:
+User
+Date
+Action
+Request ID
+==================================== FINAL TESTING
+Verify:
+Price adjustment loading works
+Customer can approve adjustments
+Customer can reject adjustments
+Notifications work
+Red counters work
+Completion workflow works
+Rating workflow works
+Commission deduction works
+Reserved points release works
+Audit logs work
+Provide a final report including:
+Root cause of current bug
+Files modified
+Database changes
+API changes
+Tested scenarios
+Confirmation that all workflows now operate correctly

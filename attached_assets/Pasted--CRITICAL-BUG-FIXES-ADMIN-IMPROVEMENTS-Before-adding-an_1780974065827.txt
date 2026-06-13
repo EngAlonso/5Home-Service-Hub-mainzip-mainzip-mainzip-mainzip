@@ -1,0 +1,226 @@
+====================================
+CRITICAL BUG FIXES & ADMIN IMPROVEMENTS
+
+Before adding any new features, perform a full stabilization pass and fix all runtime errors.
+
+====================================
+BUG #1 - TECHNICIAN REGISTRATION PAGE
+
+Current error:
+
+useFormField should be used within <FormField>
+
+Requirements:
+
+- Fix technician registration page completely.
+- Review all FormField implementations.
+- Ensure FormLabel, FormControl, FormMessage and FormDescription are only used inside FormField.
+- Verify validation works correctly.
+- Verify image uploads work correctly.
+- Verify registration form loads without runtime errors.
+
+====================================
+BUG #2 - REQUESTS MANAGEMENT PAGE
+
+Current error:
+
+A <Select.Item /> must have a value prop that is not an empty string.
+
+Requirements:
+
+- Fix all SelectItem components.
+- No SelectItem should use value="".
+- Review all request filters and dropdowns.
+- Verify Requests Management page loads correctly.
+
+====================================
+BUG #3 - COMMISSION MANAGEMENT PAGE
+
+Current error:
+
+A <Select.Item /> must have a value prop that is not an empty string.
+
+Requirements:
+
+- Fix all commission page dropdowns.
+- Verify Commission Management page loads correctly.
+- Verify all filters and forms work properly.
+
+====================================
+GLOBAL PROJECT REVIEW
+
+Search entire project for:
+
+- FormField issues
+- React Hook Form issues
+- SelectItem value="" issues
+- Runtime errors
+- Console errors
+
+Fix all issues across:
+
+- Admin Dashboard
+- Customer Dashboard
+- Technician Dashboard
+- Registration Forms
+- Settings Pages
+- Filters
+- Dropdowns
+
+====================================
+ROLE BASED ACCESS CONTROL (RBAC)
+
+Current implementation is incorrect.
+
+All staff accounts currently receive full permissions.
+
+Requirements:
+
+Only Super Admin has full access.
+
+When creating or editing a staff account:
+
+Super Admin must assign permissions manually.
+
+Permissions must use checkbox selection.
+
+Examples:
+
+Users:
+
+- View
+- Edit
+- Delete
+
+Technicians:
+
+- View
+- Approve
+- Reject
+- Suspend
+
+Requests:
+
+- View
+- Edit
+- Change Status
+
+Chats:
+
+- View Chats
+
+Commissions:
+
+- View
+- Edit
+
+Points:
+
+- View
+- Add
+- Deduct
+
+Services:
+
+- Add
+- Edit
+- Delete
+
+Locations:
+
+- Add
+- Edit
+- Delete
+
+CMS:
+
+- Manage Homepage
+- Manage Banners
+- Manage Footer
+- Manage Pages
+
+Support:
+
+- View Tickets
+- Reply Tickets
+- Close Tickets
+
+Analytics:
+
+- View Reports
+- Export Reports
+
+Admin Management:
+
+- Create Admin
+- Edit Admin
+- Delete Admin
+- Assign Permissions
+
+Only pages with granted permissions should be visible.
+
+Unauthorized access must show:
+
+"Access Denied"
+
+====================================
+CUSTOMER & TECHNICIAN MANAGEMENT
+
+Admin must have complete control over customer and technician accounts.
+
+Admin can:
+
+- Edit Full Name
+- Edit Mobile Number
+- Reset Password
+- Change Password
+- Edit Profile Information
+- Activate Account
+- Deactivate Account
+
+====================================
+ACCOUNT BANNING SYSTEM
+
+Admin can:
+
+Temporary Ban:
+
+- 1 Day
+- 3 Days
+- 7 Days
+- 30 Days
+- Custom Duration
+
+Permanent Ban:
+
+- Permanently Disable Account
+
+Store:
+
+- Ban Reason
+- Admin Name
+- Ban Date
+- Expiry Date
+
+Blocked users cannot log in.
+
+====================================
+FINAL TESTING
+
+After all fixes:
+
+- Test Technician Registration
+- Test Requests Management
+- Test Commission Management
+- Test Staff Permissions
+- Test Customer Editing
+- Test Technician Editing
+- Test Temporary Ban
+- Test Permanent Ban
+
+Generate a final report listing:
+
+- Fixed Errors
+- Modified Files
+- New Features Added
+- Tested Pages

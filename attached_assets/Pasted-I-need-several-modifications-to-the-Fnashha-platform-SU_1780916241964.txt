@@ -1,0 +1,173 @@
+I need several modifications to the Fnashha platform.
+
+====================================
+SUPER ADMIN ACCESS
+
+There is already a registered customer account with this mobile number:
+
+01200229946
+
+Promote this account to Super Admin immediately.
+
+Grant full permissions:
+
+- User Management
+- Customer Management
+- Technician Management
+- Service Management
+- Location Management
+- Requests Management
+- Chat Monitoring
+- Points Management
+- Commission Management
+- CMS Management
+- Analytics Dashboard
+- Admin Management
+- Financial Reports
+- Support Tickets
+- System Settings
+
+After login, this account should see the complete Admin Dashboard.
+
+If database migration is required, perform it automatically.
+
+====================================
+HOMEPAGE IMPROVEMENTS
+
+Keep the current color scheme and branding.
+
+Do not redesign the whole homepage.
+
+Improve the existing homepage professionally.
+
+====================================
+SERVICES SECTION
+
+Replace the current placeholder services section.
+
+I do NOT want large service cards.
+
+Create a modern icon-based services grid.
+
+Requirements:
+
+- Large clear icons
+- Larger service names
+- Better spacing
+- Mobile friendly
+- Professional appearance
+- Service names clearly visible
+
+Each service should open the request creation form.
+
+====================================
+HOW IT WORKS SECTION
+
+Replace current text with more professional Arabic content.
+
+Steps:
+
+1. أنشئ طلبك
+   اختر الخدمة واكتب تفاصيل المشكلة وأضف الصور أو التسجيل الصوتي.
+
+2. استقبل عروض الفنيين
+   سيصلك عروض أسعار من أفضل الفنيين في منطقتك.
+
+3. اختر الفني المناسب
+   قارن الأسعار والتقييمات واختر أفضل فني.
+
+4. نفذ الخدمة وقيّم الفني
+   بعد انتهاء العمل قيّم تجربتك وساعد العملاء الآخرين.
+
+Use professional icons and better visual design.
+
+====================================
+BANNERS MANAGEMENT
+
+Create a complete banner management system in Admin Dashboard.
+
+Admin can:
+
+- Add Banner
+- Edit Banner
+- Delete Banner
+- Activate Banner
+- Deactivate Banner
+- Reorder Banners
+
+Banner fields:
+
+- Title
+- Description
+- Image
+- Button Text
+- Button Link
+- Display Order
+
+Banner locations:
+
+1. Main Hero Banner
+2. Banner Below Services
+3. Banner Before Footer
+
+All banners must be editable from Admin Dashboard.
+
+====================================
+STATISTICS SECTION
+
+Replace the current yellow section with a statistics section.
+
+Statistics examples:
+
+- Number of Customers
+- Number of Technicians
+- Completed Requests
+- Covered Governorates
+
+Admin must be able to:
+
+- Use real system statistics
+  OR
+- Enter custom values manually
+
+Everything manageable from Admin Dashboard.
+
+====================================
+FOOTER IMPROVEMENTS
+
+Create a complete professional footer.
+
+Include:
+
+- About Us
+- Contact Us
+- Terms & Conditions
+- Privacy Policy
+- FAQ
+- Social Media Links
+- Mobile Number
+- Email Address
+- Copyright Information
+
+All footer content must be editable from Admin Dashboard.
+
+====================================
+CMS REQUIREMENT
+
+All homepage content must be editable from Admin Dashboard.
+
+No hardcoded text.
+
+Everything should be manageable through CMS settings.
+
+====================================
+FINAL TASK
+
+After implementing all changes:
+
+- Verify Admin Dashboard access for mobile number 01200229946
+- Verify CMS works correctly
+- Verify banner management works correctly
+- Verify statistics management works correctly
+
+Then provide a summary of all completed changes.

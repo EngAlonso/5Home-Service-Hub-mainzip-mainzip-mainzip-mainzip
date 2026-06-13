@@ -1,0 +1,222 @@
+The attached desktop image is the exact desktop reference.
+
+The attached mobile image is the exact mobile reference.
+
+The attached gold Fnashha logo is the official logo.
+
+Follow the attached reference images as closely as possible.
+
+Do not create your own layout.
+
+Do not redesign the logo.
+
+Do not replace the logo.
+
+Use the attached logo exactly as provided.
+
+==================================================
+FIND THE PAGE
+
+Find the page that currently displays:
+
+- مرحباً بك في فنشها
+- عميل
+- فني
+
+This is the page that must be redesigned.
+
+==================================================
+LOGO AND ASSETS
+
+Use the attached gold Fnashha logo.
+
+Store the logo as a local project asset.
+
+Example:
+
+/public/assets/logo.png
+
+Do NOT store the logo in the database.
+
+Do NOT store images in the database.
+
+Do NOT store design assets in the database.
+
+All visual assets must exist as project files only.
+
+The logo and assets must automatically move with:
+
+- GitHub exports
+- ZIP exports
+- Replit migrations
+- Project cloning
+
+The page must still display correctly even if the database is empty.
+
+==================================================
+PAGE STRUCTURE
+
+Top:
+
+Large centered Fnashha logo
+
+Title:
+
+مرحباً بك في فنشها
+
+Subtitle:
+
+اختر نوع الحساب للمتابعة
+
+==================================================
+ACCOUNT TYPE CARDS
+
+Desktop:
+
+Display two cards side by side.
+
+Mobile:
+
+Display two cards vertically.
+
+==================================================
+CARD 1
+
+Title:
+
+عميل
+
+Description:
+
+أبحث عن خدمات منزلية موثوقة وسريعة
+
+Button:
+
+متابعة كعميل
+
+Action:
+
+Navigate to customer registration page.
+
+==================================================
+CARD 2
+
+Title:
+
+فني
+
+Description:
+
+أقدم خدماتي وأصل إلى عملاء أكثر
+
+Button:
+
+متابعة كفني
+
+Action:
+
+Navigate to technician registration page.
+
+==================================================
+BOTTOM SECTION
+
+Text:
+
+لديك حساب بالفعل؟
+
+Link:
+
+تسجيل الدخول
+
+Navigate to the existing login page.
+
+==================================================
+DESIGN REQUIREMENTS
+
+Match the attached desktop design.
+
+Match the attached mobile design.
+
+Use:
+
+- Same spacing
+- Same card proportions
+- Same hierarchy
+- Same visual balance
+- Same premium appearance
+
+Use:
+
+- Gold branding
+- Black text
+- Soft background
+
+Modern premium UI.
+
+Professional shadows.
+
+Large rounded corners.
+
+Clean typography.
+
+Perfect alignment.
+
+==================================================
+DO NOT ADD
+
+Do not add statistics.
+
+Do not add hero images.
+
+Do not add customer images.
+
+Do not add service categories.
+
+Do not add marketing sections.
+
+Do not add extra cards.
+
+Do not add additional content.
+
+Keep the page clean and focused.
+
+==================================================
+RESPONSIVE
+
+Desktop and mobile layouts must closely follow the attached references.
+
+Do not improvise.
+
+Do not invent a new layout.
+
+==================================================
+DO NOT CHANGE
+
+Authentication logic
+
+Backend code
+
+Database schema
+
+User roles
+
+Permissions
+
+APIs
+
+Registration functionality
+
+Navigation functionality
+
+==================================================
+GOAL
+
+Create a premium account-type selection page that visually matches the attached reference designs while keeping all existing functionality unchanged.
+
+Provide:
+
+- Desktop preview
+- Mobile preview
+- Modified files list
+- Asset file locations
+- Confirmation that the logo is stored in project files and not in the database
