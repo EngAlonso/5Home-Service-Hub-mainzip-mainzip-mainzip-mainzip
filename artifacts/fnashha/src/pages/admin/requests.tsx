@@ -16,7 +16,8 @@ const STATUS_OPTIONS = [
   { value: "in_progress", label: "جاري التنفيذ" },
   { value: "completed", label: "مكتمل" },
   { value: "cancelled_by_customer", label: "ملغي من العميل" },
-  { value: "cancelled_by_admin", label: "ملغي من الإدارة" },
+  { value: "cancelled_by_technician", label: "ملغي من الفني" },
+  { value: "cancelled_by_admin", label: "ملغي بواسطة الإدارة" },
   { value: "disputed", label: "متنازع عليه" },
 ];
 

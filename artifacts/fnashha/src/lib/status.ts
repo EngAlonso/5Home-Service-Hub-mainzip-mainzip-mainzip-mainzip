@@ -8,7 +8,7 @@ export const REQUEST_STATUS_MAP: Record<string, { label: string; color: string }
   completed: { label: "مكتمل", color: "bg-green-100 text-green-800" },
   cancelled_by_customer: { label: "ملغي من العميل", color: "bg-red-100 text-red-800" },
   cancelled_by_technician: { label: "ملغي من الفني", color: "bg-red-100 text-red-800" },
-  cancelled_by_admin: { label: "ملغي من الإدارة", color: "bg-red-100 text-red-800" },
+  cancelled_by_admin: { label: "ملغي بواسطة الإدارة", color: "bg-red-100 text-red-800" },
   disputed: { label: "متنازع عليه", color: "bg-red-200 text-red-900" },
 };
 

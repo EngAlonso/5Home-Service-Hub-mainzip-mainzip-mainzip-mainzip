@@ -359,7 +359,16 @@ router.post("/requests/:id/cancel", authenticate, async (req, res) => {
     const [request] = await db.select().from(serviceRequestsTable).where(eq(serviceRequestsTable.id, id)).limit(1);
     if (!request) return res.status(404).json({ error: "الطلب غير موجود" });
 
-    if (user.role === "customer") {
+    // ── Determine cancellation actor from actual request relationship, not just role ──
+    const isRequestOwner = request.customerId === user.id;
+    const isAssignedTechnician = request.selectedTechnicianId === user.id && user.role === "technician";
+    const isAdmin = user.role === "admin" || user.role === "super_admin";
+
+    if (!isRequestOwner && !isAssignedTechnician && !isAdmin) {
+      return res.status(403).json({ error: "غير مسموح بإلغاء هذا الطلب" });
+    }
+
+    if (isRequestOwner) {
       if (!["pending", "offers_received"].includes(request.status)) {
         return res.status(403).json({
           error: "لا يمكن إلغاء الطلب بعد اختيار الفني. يرجى التواصل مع الدعم الفني لإلغاء الطلب عبر الإدارة.",
@@ -369,7 +378,7 @@ router.post("/requests/:id/cancel", authenticate, async (req, res) => {
 
     await releaseAllPendingOfferReservations(id);
 
-    if ((user.role === "admin" || user.role === "super_admin") && request.selectedTechnicianId) {
+    if (isAdmin && request.selectedTechnicianId) {
       const [selectedOffer] = await db
         .select()
         .from(offersTable)
@@ -391,9 +400,10 @@ router.post("/requests/:id/cancel", authenticate, async (req, res) => {
       }
     }
 
+    // Actor is determined by the actual relationship to the request — not just token role
     let status: string;
-    if (user.role === "customer") status = "cancelled_by_customer";
-    else if (user.role === "technician") status = "cancelled_by_technician";
+    if (isRequestOwner) status = "cancelled_by_customer";
+    else if (isAssignedTechnician) status = "cancelled_by_technician";
     else status = "cancelled_by_admin";
 
     await db
