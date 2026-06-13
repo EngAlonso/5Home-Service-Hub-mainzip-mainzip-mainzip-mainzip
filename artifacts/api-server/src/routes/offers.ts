@@ -5,7 +5,7 @@ import {
   technicianProfilesTable, commissionsTable, pointTransactionsTable,
   notificationsTable, ratingsTable, auditTrailTable,
 } from "@workspace/db";
-import { eq, and, avg, count, desc, ne } from "drizzle-orm";
+import { eq, and, avg, count, desc, ne, isNull } from "drizzle-orm";
 import { authenticate } from "../middlewares/auth";
 
 const router = Router();
@@ -42,9 +42,27 @@ async function releaseReservedForOffers(
   }
 }
 
+// ─── Helper: resolve commission — service-specific first, then global fallback ─
+async function resolveCommission(serviceId: number) {
+  // 1. Service-specific commission
+  const [specific] = await db
+    .select()
+    .from(commissionsTable)
+    .where(eq(commissionsTable.serviceId, serviceId))
+    .limit(1);
+  if (specific) return specific;
+
+  // 2. Global "all services" commission (service_id IS NULL AND area_id IS NULL)
+  const [global] = await db
+    .select()
+    .from(commissionsTable)
+    .where(and(isNull(commissionsTable.serviceId), isNull(commissionsTable.areaId)))
+    .limit(1);
+  return global ?? null;
+}
+
 // ─── Helper: calculate required points for a commission ───────────────────────
-function calcRequiredPoints(commission: { type: string; value: string } | undefined, laborPrice: number): number {
-  if (!commission) return 0;
+function calcRequiredPoints(commission: { type: string; value: string }, laborPrice: number): number {
   if (commission.type === "fixed") return parseFloat(commission.value);
   return Math.ceil((laborPrice * parseFloat(commission.value)) / 100);
 }
@@ -145,22 +163,18 @@ router.post("/requests/:requestId/offers", authenticate, async (req, res) => {
       return res.status(400).json({ error: "لا يمكن تقديم عرض على هذا الطلب بعد الآن" });
     }
 
-    // Commission is on LABOR cost only (not spare parts)
-    const [commission] = await db
-      .select()
-      .from(commissionsTable)
-      .where(eq(commissionsTable.serviceId, request.serviceId))
-      .limit(1);
+    // Commission is on LABOR cost only (not spare parts).
+    // Priority: service-specific → global (service_id IS NULL AND area_id IS NULL).
+    const commission = await resolveCommission(request.serviceId);
 
     // A commission record MUST exist before any offer can be submitted.
-    // Missing commission → block immediately; do NOT treat as 0.
     if (!commission) {
       req.log.warn(
         { serviceId: request.serviceId, requestId },
         "offer submission blocked: no commission configured for service"
       );
       return res.status(400).json({
-        error: "لم يتم إعداد عمولة لهذه الخدمة. يرجى التواصل مع الإدارة.",
+        error: "لم يتم إعداد عمولة لهذه الخدمة",
       });
     }
 
