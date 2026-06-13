@@ -152,6 +152,18 @@ router.post("/requests/:requestId/offers", authenticate, async (req, res) => {
       .where(eq(commissionsTable.serviceId, request.serviceId))
       .limit(1);
 
+    // A commission record MUST exist before any offer can be submitted.
+    // Missing commission → block immediately; do NOT treat as 0.
+    if (!commission) {
+      req.log.warn(
+        { serviceId: request.serviceId, requestId },
+        "offer submission blocked: no commission configured for service"
+      );
+      return res.status(400).json({
+        error: "لم يتم إعداد عمولة لهذه الخدمة. يرجى التواصل مع الإدارة.",
+      });
+    }
+
     const requiredPoints = calcRequiredPoints(commission, laborPrice);
 
     // Available balance = total balance – already reserved
