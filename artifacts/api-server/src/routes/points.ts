@@ -36,8 +36,15 @@ router.get("/points/transactions", authenticate, async (req, res) => {
     const limit = 50;
     const offset = (pageNum - 1) * limit;
 
+    const isAdmin = req.user!.role === "admin" || req.user!.role === "super_admin";
+
+    // Admin with no technicianId param → return empty list (no profile to look up)
+    if (isAdmin && !technicianId) {
+      return res.json([]);
+    }
+
     let profileId: number;
-    if (technicianId && (req.user!.role === "admin" || req.user!.role === "super_admin")) {
+    if (technicianId && isAdmin) {
       const [p] = await db.select().from(technicianProfilesTable).where(eq(technicianProfilesTable.userId, parseInt(technicianId))).limit(1);
       if (!p) return res.status(404).json({ error: "الفني غير موجود" });
       profileId = p.id;

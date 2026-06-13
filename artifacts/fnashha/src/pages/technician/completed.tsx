@@ -4,18 +4,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, MapPin, CalendarDays, DollarSign, Star } from "lucide-react";
 import { REQUEST_STATUS_MAP } from "@/lib/status";
+import { useAuth } from "@/contexts/auth-context";
 
 const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") || "";
 
 export default function TechnicianCompleted() {
   const [, navigate] = useLocation();
+  const { token } = useAuth();
   const [requests, setRequests] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
+    if (!token) return;
     setIsLoading(true);
-    fetch(`${BASE_URL}/api/requests/my-completed`, { credentials: "include" })
+    fetch(`${BASE_URL}/api/requests/my-completed`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data.data)) {
@@ -25,7 +30,7 @@ export default function TechnicianCompleted() {
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [token]);
 
   const totalEarnings = requests
     .filter((r) => r.status === "completed")

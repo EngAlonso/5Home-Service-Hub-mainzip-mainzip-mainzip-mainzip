@@ -64,6 +64,7 @@ export const pointTransactionTypeEnum = pgEnum("point_transaction_type", [
   "credit",
   "debit",
   "commission",
+  "release",
 ]);
 
 export const commissionTypeEnum = pgEnum("commission_type", [

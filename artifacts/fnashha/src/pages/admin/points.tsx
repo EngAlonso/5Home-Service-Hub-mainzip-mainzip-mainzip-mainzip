@@ -37,9 +37,9 @@ export default function AdminPoints() {
 
   const { data: transactions = [], refetch: refetchTxns } = useQuery({
     queryKey: ["adminPointTransactions", techId],
-    queryFn: () => techId
-      ? apiCall(`/points/transactions?technicianId=${techId}`, "GET", undefined, token || "")
-      : apiCall("/points/transactions", "GET", undefined, token || ""),
+    queryFn: () =>
+      apiCall(`/points/transactions?technicianId=${techId}`, "GET", undefined, token || ""),
+    enabled: !!techId,
     retry: false,
   });
 

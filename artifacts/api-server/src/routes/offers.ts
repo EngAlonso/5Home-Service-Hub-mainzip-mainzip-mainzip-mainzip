@@ -3,7 +3,7 @@ import { db } from "@workspace/db";
 import {
   offersTable, serviceRequestsTable, usersTable,
   technicianProfilesTable, commissionsTable, pointTransactionsTable,
-  notificationsTable, ratingsTable, auditTrailTable,
+  notificationsTable, ratingsTable, auditTrailTable, servicesTable,
 } from "@workspace/db";
 import { eq, and, avg, count, desc, ne, isNull } from "drizzle-orm";
 import { authenticate } from "../middlewares/auth";
@@ -66,6 +66,55 @@ function calcRequiredPoints(commission: { type: string; value: string }, laborPr
   if (commission.type === "fixed") return parseFloat(commission.value);
   return Math.ceil((laborPrice * parseFloat(commission.value)) / 100);
 }
+
+// ─── GET /api/offers/my ───────────────────────────────────────────────────────
+// Returns all offers submitted by the logged-in technician
+router.get("/offers/my", authenticate, async (req, res) => {
+  try {
+    if (req.user!.role !== "technician") {
+      return res.status(403).json({ error: "الفنيون فقط يمكنهم الوصول لهذا المسار" });
+    }
+
+    const offers = await db
+      .select()
+      .from(offersTable)
+      .where(eq(offersTable.technicianId, req.user!.id))
+      .orderBy(desc(offersTable.createdAt));
+
+    // Enrich each offer with service name from the request
+    const enriched = await Promise.all(
+      offers.map(async (offer) => {
+        const [request] = await db
+          .select({ id: serviceRequestsTable.id, status: serviceRequestsTable.status, serviceId: serviceRequestsTable.serviceId })
+          .from(serviceRequestsTable)
+          .where(eq(serviceRequestsTable.id, offer.requestId))
+          .limit(1);
+
+        const service = request
+          ? await db
+              .select({ id: servicesTable.id, name: servicesTable.name })
+              .from(servicesTable)
+              .where(eq(servicesTable.id, request.serviceId))
+              .limit(1)
+              .then((r) => r[0] ?? null)
+          : null;
+
+        return {
+          ...offer,
+          price: parseFloat(offer.price as string),
+          spareParts: offer.spareParts ? parseFloat(offer.spareParts as string) : 0,
+          requestStatus: request?.status ?? null,
+          service: service ?? null,
+        };
+      })
+    );
+
+    return res.json(enriched);
+  } catch (err) {
+    req.log.error({ err });
+    return res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
 
 // ─── GET /api/requests/:requestId/offers ──────────────────────────────────────
 router.get("/requests/:requestId/offers", authenticate, async (req, res) => {
