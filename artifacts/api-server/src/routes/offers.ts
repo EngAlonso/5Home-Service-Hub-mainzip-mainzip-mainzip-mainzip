@@ -158,7 +158,7 @@ router.post("/requests/:requestId/offers", authenticate, async (req, res) => {
     const availableBalance = profile.pointsBalance - profile.reservedPoints;
     if (availableBalance < requiredPoints) {
       return res.status(400).json({
-        error: `رصيد النقاط الحالي لا يكفي لتقديم عرض سعر. المتاح: ${availableBalance} نقطة، المطلوب: ${requiredPoints} نقطة. يرجى شحن الرصيد.`,
+        error: "رصيد النقاط الحالي غير كافٍ لتقديم عرض على هذه الخدمة",
       });
     }
 
