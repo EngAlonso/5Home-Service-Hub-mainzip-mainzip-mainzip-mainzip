@@ -46,7 +46,6 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/admin/services", icon: Settings2, label: "الخدمات", permission: "services.edit" },
       { href: "/admin/locations", icon: MapPin, label: "المناطق", permission: "locations.edit" },
-      { href: "/admin/commissions", icon: DollarSign, label: "العمولات", permission: "commissions.view" },
       { href: "/admin/commission-ranges", icon: Layers, label: "نطاقات العمولة", permission: "commissions.view" },
       { href: "/admin/points", icon: Coins, label: "النقاط", permission: "points.view" },
     ],

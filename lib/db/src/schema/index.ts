@@ -67,10 +67,6 @@ export const pointTransactionTypeEnum = pgEnum("point_transaction_type", [
   "release",
 ]);
 
-export const commissionTypeEnum = pgEnum("commission_type", [
-  "fixed",
-  "percentage",
-]);
 
 export const ticketStatusEnum = pgEnum("ticket_status", [
   "open",
@@ -202,7 +198,6 @@ export const servicesTable = pgTable("services", {
 export const servicesRelations = relations(servicesTable, ({ many }) => ({
   technicianServices: many(technicianServicesTable),
   serviceRequests: many(serviceRequestsTable),
-  commissions: many(commissionsTable),
 }));
 
 export type Service = typeof servicesTable.$inferSelect;
@@ -247,7 +242,6 @@ export const areasRelations = relations(areasTable, ({ one, many }) => ({
   }),
   technicianAreas: many(technicianAreasTable),
   serviceRequests: many(serviceRequestsTable),
-  commissions: many(commissionsTable),
 }));
 
 export type Area = typeof areasTable.$inferSelect;
@@ -534,35 +528,6 @@ export const pointTransactionsRelations = relations(
 
 export type PointTransaction = typeof pointTransactionsTable.$inferSelect;
 
-// ─── COMMISSIONS ─────────────────────────────────────────────────────────────
-
-export const commissionsTable = pgTable("commissions", {
-  id: serial("id").primaryKey(),
-  serviceId: integer("service_id").references(() => servicesTable.id, {
-    onDelete: "cascade",
-  }),
-  areaId: integer("area_id").references(() => areasTable.id, {
-    onDelete: "cascade",
-  }),
-  type: commissionTypeEnum("type").notNull(),
-  value: numeric("value", { precision: 10, scale: 2 }).notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-export const commissionsRelations = relations(commissionsTable, ({ one }) => ({
-  service: one(servicesTable, {
-    fields: [commissionsTable.serviceId],
-    references: [servicesTable.id],
-  }),
-  area: one(areasTable, {
-    fields: [commissionsTable.areaId],
-    references: [areasTable.id],
-  }),
-}));
-
-export type Commission = typeof commissionsTable.$inferSelect;
-
 // ─── COMMISSION RANGES ────────────────────────────────────────────────────────
 // Range-based commission rules: price bracket → required points.
 // service_id = NULL means "all services" (global rule).
@@ -574,7 +539,10 @@ export const commissionRangesTable = pgTable("commission_ranges", {
   serviceId: integer("service_id").references(() => servicesTable.id, { onDelete: "cascade" }),
   minPrice: numeric("min_price", { precision: 10, scale: 2 }).notNull(),
   maxPrice: numeric("max_price", { precision: 10, scale: 2 }).notNull(),
-  requiredPoints: integer("required_points").notNull(),
+  requiredPoints: integer("required_points").notNull().default(0),
+  commissionType: text("commission_type").notNull().default("fixed"),
+  commissionValue: numeric("commission_value", { precision: 10, scale: 2 }).notNull().default("0"),
+  isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

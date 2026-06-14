@@ -3,3 +3,6 @@
 - [Fnashha generated API hook signatures](fnashha-api-hooks.md) — Critical: generated hooks use positional args not objects; useListMessages(requestId:number), not {requestId}.
 - [Fnashha point transaction types](fnashha-point-txn-types.md) — DB enum has credit/debit/commission/release; reserve changes only update reservedPoints column (no transaction); release logs a transaction but does not change pointsBalance.
 - [Fnashha commission ranges system](fnashha-commission-ranges.md) — Range-based commission: commission_ranges table + areas.extra_points; replaces flat commissionsTable in offer submission; admin CRUD at /admin/commission-ranges.
+- [Fnashha commission recalculation](fnashha-commission-recalc.md) — resolveCommissionRange is exported from offers.ts and called in requests.ts price-adjustment/respond approved branch; debit txn for increase, release txn for decrease.
+- [Fnashha test user cleanup order](fnashha-test-cleanup.md) — When deleting test users: delete service_requests first (cascades audit_trail), then point_transactions, then users; audit_trail.changed_by→users has no CASCADE.
+- [Fnashha auth localStorage quota](fnashha-auth-localstorage.md) — Technician login fails with QuotaExceededError: technicianProfile includes base64 images; strip them in formatUser (auth.ts) before sending login/me response.

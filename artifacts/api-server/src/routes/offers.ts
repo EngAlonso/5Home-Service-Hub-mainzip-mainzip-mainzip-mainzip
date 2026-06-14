@@ -44,31 +44,38 @@ async function releaseReservedForOffers(
 
 // ─── Helper: resolve commission range → total required points ─────────────────
 // Priority: service-specific range → global range (service_id IS NULL).
-// Total = range.requiredPoints + area.extraPoints.
-// Returns null if no matching range exists for the given price.
-async function resolveCommissionRange(
+// Only active ranges are considered.
+// Commission types:
+//   fixed      → commissionValue points (integer)
+//   percentage → ceil((laborPrice × commissionValue) / 100) points
+// Total = commission result + area.extraPoints.
+// Returns null if no matching active range exists for the given price.
+// Exported so price-adjustment approval in requests.ts can re-run the same logic.
+export async function resolveCommissionRange(
   serviceId: number,
   laborPrice: number,
   areaId: number | null
 ): Promise<number | null> {
-  // 1. Service-specific range covering this labor price
+  // 1. Service-specific active range covering this labor price
   const [specific] = await db
     .select()
     .from(commissionRangesTable)
     .where(and(
       eq(commissionRangesTable.serviceId, serviceId),
+      eq(commissionRangesTable.isActive, true),
       sql`${commissionRangesTable.minPrice} <= ${laborPrice}`,
       sql`${commissionRangesTable.maxPrice} >= ${laborPrice}`,
     ))
     .limit(1);
 
-  // 2. Global range (service_id IS NULL) covering this labor price
+  // 2. Global active range (service_id IS NULL) covering this labor price
   const rangeRow = specific ?? await (async () => {
     const [global] = await db
       .select()
       .from(commissionRangesTable)
       .where(and(
         isNull(commissionRangesTable.serviceId),
+        eq(commissionRangesTable.isActive, true),
         sql`${commissionRangesTable.minPrice} <= ${laborPrice}`,
         sql`${commissionRangesTable.maxPrice} >= ${laborPrice}`,
       ))
@@ -78,7 +85,18 @@ async function resolveCommissionRange(
 
   if (!rangeRow) return null;
 
-  // 3. Area extra points
+  // 3. Calculate commission points based on type
+  const commType = rangeRow.commissionType ?? "fixed";
+  const commValue = parseFloat(rangeRow.commissionValue as string ?? "0") || rangeRow.requiredPoints;
+
+  let commissionPoints: number;
+  if (commType === "percentage") {
+    commissionPoints = Math.ceil((laborPrice * commValue) / 100);
+  } else {
+    commissionPoints = Math.round(commValue) || rangeRow.requiredPoints;
+  }
+
+  // 4. Area extra points
   let areaExtra = 0;
   if (areaId) {
     const [area] = await db
@@ -89,7 +107,7 @@ async function resolveCommissionRange(
     areaExtra = area?.extraPoints ?? 0;
   }
 
-  return rangeRow.requiredPoints + areaExtra;
+  return commissionPoints + areaExtra;
 }
 
 // ─── GET /api/offers/my ───────────────────────────────────────────────────────

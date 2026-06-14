@@ -1,0 +1,95 @@
+I want to completely retire and remove the legacy commissions system, but ONLY if it is truly unused.
+
+Phase 1 — Dependency Audit (Mandatory)
+
+Before deleting anything:
+
+1. Scan the entire codebase for all references to:
+   
+   - commissions table
+   - commissions API routes
+   - commissions admin page
+   - commissions schema
+   - commissions hooks
+   - commissions queries
+   - commissions calculations
+   - commissions migrations
+
+2. Produce a dependency report showing:
+   
+   - File path
+   - Function name
+   - Purpose of the dependency
+   - Whether it is runtime-critical or dead code
+
+3. Verify that all active commission calculations now use ONLY:
+   
+   - commission_ranges
+   - fixed range commissions
+   - percentage range commissions
+   - area extra points
+
+4. Verify that:
+   
+   - Offer submission does not use commissions table
+   - Offer validation does not use commissions table
+   - Reserved points calculation does not use commissions table
+   - Request completion does not use commissions table
+   - Price adjustment flow does not use commissions table
+
+5. If ANY runtime dependency still exists:
+   
+   - STOP.
+   - Do NOT delete anything.
+   - Provide a report explaining what still depends on commissions.
+
+Phase 2 — Safe Removal (Only if Phase 1 passes)
+
+If and only if the legacy commissions system is completely unused:
+
+1. Remove the old Commissions admin page.
+2. Remove old Commissions routes.
+3. Remove old frontend hooks.
+4. Remove old backend services.
+5. Remove old schema definitions.
+6. Remove old navigation links.
+7. Remove dead imports and unused code.
+
+Database Cleanup
+
+Only after confirming zero dependencies:
+
+1. Create a safe migration.
+2. Drop the commissions table.
+3. Remove related indexes and constraints.
+4. Ensure commission_ranges remains untouched.
+
+Validation
+
+After removal:
+
+1. Test offer submission.
+2. Test offer acceptance.
+3. Test price adjustment flow.
+4. Test commission reservation.
+5. Test commission release.
+6. Test request completion.
+7. Test technician wallet.
+8. Test commission ranges page.
+
+Final Report
+
+Provide:
+
+- Dependency audit results
+- Files removed
+- Files modified
+- Database objects removed
+- Runtime tests performed
+- Test results
+- Confirmation whether commissions table was removed or retained
+- Confirmation that commission_ranges is now the only commission system
+
+Do not modify unrelated business logic.
+Do not change points logic except where required by commission calculations.
+Do not proceed with deletion unless the audit proves the legacy commissions system is completely unused.

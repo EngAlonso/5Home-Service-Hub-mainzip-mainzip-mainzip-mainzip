@@ -47,10 +47,9 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   },
   {
     group: "commissions",
-    label: "العمولات",
+    label: "نطاقات العمولة",
     permissions: [
-      { key: "commissions.view", label: "عرض" },
-      { key: "commissions.edit", label: "تعديل" },
+      { key: "commissions.view", label: "عرض نطاقات العمولة" },
     ],
   },
   {

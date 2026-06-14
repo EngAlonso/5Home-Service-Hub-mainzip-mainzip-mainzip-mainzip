@@ -9,6 +9,7 @@ import {
 } from "@workspace/db";
 import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { authenticate } from "../middlewares/auth";
+import { resolveCommissionRange } from "./offers";
 
 const router = Router();
 
@@ -620,6 +621,91 @@ router.post("/requests/:id/price-adjustment/respond", authenticate, async (req, 
           eq(offersTable.status, "selected"),
         ));
       }
+
+      // ── Recalculate commission based on the newly accepted labor price ────────
+      // resolveCommissionRange runs the same logic used at offer submission:
+      // service-specific → global range, fixed or percentage, plus area extra points.
+      if (request.serviceId) {
+        const [selectedOffer] = await db
+          .select()
+          .from(offersTable)
+          .where(and(eq(offersTable.requestId, id), eq(offersTable.status, "selected")))
+          .limit(1);
+
+        if (selectedOffer) {
+          const [profile] = await db
+            .select()
+            .from(technicianProfilesTable)
+            .where(eq(technicianProfilesTable.userId, selectedOffer.technicianId))
+            .limit(1);
+
+          if (profile) {
+            const newLaborPrice = parseFloat(adj.newPrice as string);
+            const newRequiredPoints = await resolveCommissionRange(
+              request.serviceId,
+              newLaborPrice,
+              request.areaId ?? null,
+            );
+
+            if (newRequiredPoints !== null) {
+              const oldReserved = selectedOffer.reservedPoints;
+              const diff = newRequiredPoints - oldReserved;
+
+              if (diff > 0) {
+                // New commission is higher → reserve the extra difference.
+                // Cap at available balance so we never go negative.
+                const available = Math.max(0, profile.pointsBalance - profile.reservedPoints);
+                const toReserve = Math.min(diff, available);
+                const newProfileReserved = profile.reservedPoints + toReserve;
+                const finalOfferReserved = oldReserved + toReserve;
+
+                await db.update(technicianProfilesTable)
+                  .set({ reservedPoints: newProfileReserved, updatedAt: now })
+                  .where(eq(technicianProfilesTable.id, profile.id));
+
+                if (toReserve > 0) {
+                  await db.insert(pointTransactionsTable).values({
+                    technicianId: profile.id,
+                    amount: toReserve,
+                    type: "debit",
+                    description: `حجز إضافي بسبب تعديل السعر — طلب #${id}`,
+                    balanceAfter: profile.pointsBalance,
+                    requestId: id,
+                  });
+                }
+
+                await db.update(offersTable)
+                  .set({ reservedPoints: finalOfferReserved, updatedAt: now })
+                  .where(eq(offersTable.id, selectedOffer.id));
+
+              } else if (diff < 0) {
+                // New commission is lower → release the surplus back to available.
+                const toRelease = Math.abs(diff);
+                const newProfileReserved = Math.max(0, profile.reservedPoints - toRelease);
+
+                await db.update(technicianProfilesTable)
+                  .set({ reservedPoints: newProfileReserved, updatedAt: now })
+                  .where(eq(technicianProfilesTable.id, profile.id));
+
+                await db.insert(pointTransactionsTable).values({
+                  technicianId: profile.id,
+                  amount: toRelease,
+                  type: "release",
+                  description: `استرداد نقاط بسبب تعديل السعر — طلب #${id}`,
+                  balanceAfter: profile.pointsBalance,
+                  requestId: id,
+                });
+
+                await db.update(offersTable)
+                  .set({ reservedPoints: newRequiredPoints, updatedAt: now })
+                  .where(eq(offersTable.id, selectedOffer.id));
+              }
+              // diff === 0: same commission — no balance changes needed
+            }
+          }
+        }
+      }
+      // ── End commission recalculation ──────────────────────────────────────────
 
       await db.update(priceAdjustmentsTable).set({
         status: "approved",

@@ -43,9 +43,6 @@ export async function bootstrap(): Promise<void> {
       CREATE TYPE point_transaction_type AS ENUM ('credit','debit','commission');
     EXCEPTION WHEN duplicate_object THEN NULL; END $$;
     DO $$ BEGIN
-      CREATE TYPE commission_type AS ENUM ('fixed','percentage');
-    EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-    DO $$ BEGIN
       CREATE TYPE ticket_status AS ENUM ('open','in_progress','resolved','closed');
     EXCEPTION WHEN duplicate_object THEN NULL; END $$;
     DO $$ BEGIN
@@ -212,16 +209,6 @@ export async function bootstrap(): Promise<void> {
     );
     CREATE INDEX IF NOT EXISTS point_txn_technician_idx ON point_transactions (technician_id);
 
-    CREATE TABLE IF NOT EXISTS commissions (
-      id SERIAL PRIMARY KEY,
-      service_id INTEGER REFERENCES services(id) ON DELETE CASCADE,
-      area_id INTEGER REFERENCES areas(id) ON DELETE CASCADE,
-      type commission_type NOT NULL,
-      value NUMERIC(10,2) NOT NULL,
-      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-    );
-
     CREATE TABLE IF NOT EXISTS price_adjustments (
       id SERIAL PRIMARY KEY,
       request_id INTEGER NOT NULL REFERENCES service_requests(id) ON DELETE CASCADE,
@@ -318,6 +305,41 @@ export async function bootstrap(): Promise<void> {
   const alterDDL = `
     ALTER TABLE IF EXISTS services ADD COLUMN IF NOT EXISTS icon_size INTEGER NOT NULL DEFAULT 100;
     ALTER TABLE IF EXISTS services ADD COLUMN IF NOT EXISTS icon_shape TEXT NOT NULL DEFAULT 'square';
+
+    DO $$ BEGIN
+      ALTER TYPE point_transaction_type ADD VALUE IF NOT EXISTS 'release';
+    EXCEPTION WHEN others THEN NULL; END $$;
+
+    ALTER TABLE IF EXISTS areas ADD COLUMN IF NOT EXISTS extra_points INTEGER NOT NULL DEFAULT 0;
+
+    ALTER TABLE IF EXISTS point_transactions ADD COLUMN IF NOT EXISTS performed_by TEXT;
+
+    ALTER TABLE IF EXISTS price_adjustments ADD COLUMN IF NOT EXISTS technician_id INTEGER;
+    ALTER TABLE IF EXISTS price_adjustments ADD COLUMN IF NOT EXISTS old_price NUMERIC(10,2);
+    ALTER TABLE IF EXISTS price_adjustments ADD COLUMN IF NOT EXISTS old_spare_parts NUMERIC(10,2);
+    ALTER TABLE IF EXISTS price_adjustments ADD COLUMN IF NOT EXISTS new_spare_parts NUMERIC(10,2);
+    ALTER TABLE IF EXISTS price_adjustments ADD COLUMN IF NOT EXISTS new_description TEXT;
+    ALTER TABLE IF EXISTS price_adjustments ADD COLUMN IF NOT EXISTS supporting_image TEXT;
+    ALTER TABLE IF EXISTS price_adjustments ADD COLUMN IF NOT EXISTS decision_date TIMESTAMP;
+
+    CREATE TABLE IF NOT EXISTS commission_ranges (
+      id SERIAL PRIMARY KEY,
+      service_id INTEGER REFERENCES services(id) ON DELETE CASCADE,
+      min_price NUMERIC(10,2) NOT NULL,
+      max_price NUMERIC(10,2) NOT NULL,
+      required_points INTEGER NOT NULL DEFAULT 0,
+      commission_type TEXT NOT NULL DEFAULT 'fixed',
+      commission_value NUMERIC(10,2) NOT NULL DEFAULT 0,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    ALTER TABLE IF EXISTS commission_ranges ADD COLUMN IF NOT EXISTS commission_type TEXT NOT NULL DEFAULT 'fixed';
+    ALTER TABLE IF EXISTS commission_ranges ADD COLUMN IF NOT EXISTS commission_value NUMERIC(10,2) NOT NULL DEFAULT 0;
+    ALTER TABLE IF EXISTS commission_ranges ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
+    ALTER TABLE IF EXISTS commission_ranges ADD COLUMN IF NOT EXISTS required_points INTEGER NOT NULL DEFAULT 0;
+
   `;
 
   try {

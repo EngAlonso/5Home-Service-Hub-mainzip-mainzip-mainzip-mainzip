@@ -37,6 +37,11 @@ const FALLBACK_SUPER_ADMIN = {
 
 function formatUser(user: typeof usersTable.$inferSelect | typeof FALLBACK_SUPER_ADMIN, profile?: any) {
   const role = user.mobile === SUPER_ADMIN_MOBILE ? "super_admin" : user.role;
+  // Strip large base64 image fields before serialising into the JWT response /
+  // localStorage to avoid exceeding the ~5 MB browser storage quota.
+  const technicianProfile = profile
+    ? (({ personalPhoto: _p, nationalIdFront: _f, nationalIdBack: _b, ...rest }) => rest)(profile)
+    : null;
   return {
     id: user.id,
     fullName: user.fullName,
@@ -49,7 +54,7 @@ function formatUser(user: typeof usersTable.$inferSelect | typeof FALLBACK_SUPER
     createdAt: user.createdAt,
     suspensionReason: user.suspensionReason,
     bannedUntil: user.bannedUntil,
-    technicianProfile: profile || null,
+    technicianProfile,
   };
 }
 

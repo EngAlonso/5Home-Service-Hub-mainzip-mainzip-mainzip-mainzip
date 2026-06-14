@@ -10,10 +10,43 @@ import {
   areasTable,
   ratingsTable,
 } from "@workspace/db";
-import { eq, like, and, or, sql, avg, count, desc } from "drizzle-orm";
+import { eq, like, and, or, sql, avg, count, desc, inArray } from "drizzle-orm";
 import { authenticate, requireRole } from "../middlewares/auth";
 
 const router = Router();
+
+async function attachServicesAndAreas(profiles: { profile: any; user: any }[]) {
+  if (profiles.length === 0) return [];
+  const profileIds = profiles.map((p) => p.profile.id);
+  const [allServices, allAreas] = await Promise.all([
+    db
+      .select({ technicianId: technicianServicesTable.technicianId, service: servicesTable })
+      .from(technicianServicesTable)
+      .leftJoin(servicesTable, eq(technicianServicesTable.serviceId, servicesTable.id))
+      .where(inArray(technicianServicesTable.technicianId, profileIds)),
+    db
+      .select({ technicianId: technicianAreasTable.technicianId, area: areasTable })
+      .from(technicianAreasTable)
+      .leftJoin(areasTable, eq(technicianAreasTable.areaId, areasTable.id))
+      .where(inArray(technicianAreasTable.technicianId, profileIds)),
+  ]);
+  const servicesByTechId = new Map<number, any[]>();
+  for (const row of allServices) {
+    if (!servicesByTechId.has(row.technicianId)) servicesByTechId.set(row.technicianId, []);
+    if (row.service) servicesByTechId.get(row.technicianId)!.push(row.service);
+  }
+  const areasByTechId = new Map<number, any[]>();
+  for (const row of allAreas) {
+    if (!areasByTechId.has(row.technicianId)) areasByTechId.set(row.technicianId, []);
+    if (row.area) areasByTechId.get(row.technicianId)!.push(row.area);
+  }
+  return profiles.map(({ profile, user }) => ({
+    ...profile,
+    user: user ? formatUser(user) : null,
+    services: servicesByTechId.get(profile.id) || [],
+    areas: areasByTechId.get(profile.id) || [],
+  }));
+}
 
 function formatUser(user: any, profile?: any) {
   return {
@@ -177,7 +210,7 @@ router.get("/technicians/pending", authenticate, requireRole("admin", "super_adm
       .from(technicianProfilesTable)
       .leftJoin(usersTable, eq(technicianProfilesTable.userId, usersTable.id))
       .where(eq(technicianProfilesTable.approvalStatus, "pending"));
-    return res.json(profiles.map(({ profile, user }) => ({ ...profile, user: user ? formatUser(user) : null })));
+    return res.json(await attachServicesAndAreas(profiles));
   } catch (err) {
     return res.status(500).json({ error: "حدث خطأ في الخادم" });
   }
@@ -224,7 +257,7 @@ router.get("/technicians/approved", authenticate, requireRole("admin", "super_ad
       .leftJoin(usersTable, eq(technicianProfilesTable.userId, usersTable.id))
       .where(eq(technicianProfilesTable.approvalStatus, "approved"))
       .orderBy(desc(technicianProfilesTable.updatedAt));
-    return res.json(profiles.map(({ profile, user }) => ({ ...profile, user: user ? formatUser(user) : null })));
+    return res.json(await attachServicesAndAreas(profiles));
   } catch (err) {
     return res.status(500).json({ error: "حدث خطأ في الخادم" });
   }
@@ -239,7 +272,7 @@ router.get("/technicians/rejected", authenticate, requireRole("admin", "super_ad
       .leftJoin(usersTable, eq(technicianProfilesTable.userId, usersTable.id))
       .where(eq(technicianProfilesTable.approvalStatus, "rejected"))
       .orderBy(desc(technicianProfilesTable.updatedAt));
-    return res.json(profiles.map(({ profile, user }) => ({ ...profile, user: user ? formatUser(user) : null })));
+    return res.json(await attachServicesAndAreas(profiles));
   } catch (err) {
     return res.status(500).json({ error: "حدث خطأ في الخادم" });
   }

@@ -80,10 +80,12 @@ export default function AdminTechnicians() {
   const { data: approvedTechs = [], isLoading: approvedLoading } = useQuery({
     queryKey: ["approvedTechnicians"],
     queryFn: () => apiCall("/technicians/approved", "GET", undefined, token || ""),
+    enabled: !!token,
   });
   const { data: rejectedTechs = [], isLoading: rejectedLoading } = useQuery({
     queryKey: ["rejectedTechnicians"],
     queryFn: () => apiCall("/technicians/rejected", "GET", undefined, token || ""),
+    enabled: !!token,
   });
 
   const { data: servicesList = [] } = useListServices();
